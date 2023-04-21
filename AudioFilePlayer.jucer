@@ -2,17 +2,18 @@
 
 <JUCERPROJECT id="h8IpyS" name="AudioFilePlayer" projectType="audioplug" version="1.0.0"
               bundleIdentifier="com.NTwelve.AudioFilePlayer" includeBinaryInAppConfig="1"
-              buildVST="1" buildVST3="1" buildAU="1" buildRTAS="0" buildAAX="0"
+              buildVST="0" buildVST3="1" buildAU="1" buildRTAS="0" buildAAX="0"
               pluginName="AudioFilePlayer" pluginDesc="AudioFilePlayer" pluginManufacturer="NTwelve"
               pluginManufacturerCode="NTlv" pluginCode="NTPl" pluginChannelConfigs=""
               pluginIsSynth="1" pluginWantsMidiIn="0" pluginProducesMidiOut="0"
               pluginSilenceInIsSilenceOut="0" pluginEditorRequiresKeys="0"
               pluginAUExportPrefix="AudioFilePlayerAU" pluginRTASCategory=""
-              aaxIdentifier="com.NTwelve.AudioFilePlayer" pluginAAXCategory="AAX_ePlugInCategory_Dynamics"
-              jucerVersion="5.2.0" companyEmail="" companyName="NTwelve" buildAUv3="1"
-              pluginIsMidiEffectPlugin="0" buildStandalone="0" displaySplashScreen="1"
-              reportAppUsage="1" splashScreenColour="Dark" enableIAA="0" cppLanguageStandard="11"
-              companyCopyright="NTwelve">
+              aaxIdentifier="com.NTwelve.AudioFilePlayer" pluginAAXCategory="2"
+              companyEmail="" companyName="NTwelve" buildAUv3="0" pluginIsMidiEffectPlugin="0"
+              buildStandalone="1" displaySplashScreen="1" reportAppUsage="1"
+              splashScreenColour="Dark" enableIAA="0" companyCopyright="NTwelve"
+              pluginFormats="buildAU,buildStandalone,buildVST3" pluginCharacteristicsValue="pluginIsSynth"
+              jucerFormatVersion="1">
   <MAINGROUP id="tjuOXe" name="AudioFilePlayer">
     <FILE id="lFuAFH" name="AudioThumbnailComp.cpp" compile="1" resource="0"
           file="Source/AudioThumbnailComp.cpp"/>
@@ -27,50 +28,26 @@
     <FILE id="unqOmz" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
   </MAINGROUP>
   <EXPORTFORMATS>
-    <VS2015 targetFolder="Builds/VisualStudio2015" vst3Folder="">
-      <CONFIGURATIONS>
-        <CONFIGURATION name="Debug" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
-                       isDebug="1" optimisation="1" targetName="AudioFilePlayer" debugInformationFormat="ProgramDatabase"
-                       enablePluginBinaryCopyStep="0"/>
-        <CONFIGURATION name="Release" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
-                       isDebug="0" optimisation="3" targetName="AudioFilePlayer" debugInformationFormat="ProgramDatabase"
-                       enablePluginBinaryCopyStep="0" linkTimeOptimisation="1"/>
-      </CONFIGURATIONS>
-      <MODULEPATHS>
-        <MODULEPATH id="juce_core" path="JUCE/modules"/>
-        <MODULEPATH id="juce_events" path="JUCE/modules"/>
-        <MODULEPATH id="juce_graphics" path="JUCE/modules"/>
-        <MODULEPATH id="juce_data_structures" path="JUCE/modules"/>
-        <MODULEPATH id="juce_gui_basics" path="JUCE/modules"/>
-        <MODULEPATH id="juce_audio_basics" path="JUCE/modules"/>
-        <MODULEPATH id="juce_audio_devices" path="JUCE/modules"/>
-        <MODULEPATH id="juce_audio_formats" path="JUCE/modules"/>
-        <MODULEPATH id="juce_audio_processors" path="JUCE/modules"/>
-        <MODULEPATH id="juce_audio_plugin_client" path="JUCE/modules"/>
-        <MODULEPATH id="juce_audio_utils" path="JUCE/modules"/>
-        <MODULEPATH id="juce_gui_extra" path="../JUCE/modules"/>
-      </MODULEPATHS>
-    </VS2015>
     <XCODE_MAC targetFolder="Builds/MacOSX" postbuildCommand="" vst3Folder="">
       <CONFIGURATIONS>
-        <CONFIGURATION name="Debug" osxSDK="default" osxCompatibility="default" osxArchitecture="default"
-                       isDebug="1" optimisation="1" targetName="AudioFilePlayer" enablePluginBinaryCopyStep="1"/>
-        <CONFIGURATION name="Release" osxSDK="default" osxCompatibility="default" osxArchitecture="default"
-                       isDebug="0" optimisation="3" targetName="AudioFilePlayer" enablePluginBinaryCopyStep="1"/>
+        <CONFIGURATION name="Debug" osxSDK="default" osxCompatibility="default" isDebug="1"
+                       optimisation="1" targetName="AudioFilePlayer" enablePluginBinaryCopyStep="1"/>
+        <CONFIGURATION name="Release" osxSDK="default" osxCompatibility="default" isDebug="0"
+                       optimisation="3" targetName="AudioFilePlayer" enablePluginBinaryCopyStep="1"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
-        <MODULEPATH id="juce_gui_basics" path="JUCE/modules"/>
-        <MODULEPATH id="juce_graphics" path="JUCE/modules"/>
-        <MODULEPATH id="juce_events" path="JUCE/modules"/>
-        <MODULEPATH id="juce_data_structures" path="JUCE/modules"/>
-        <MODULEPATH id="juce_core" path="JUCE/modules"/>
-        <MODULEPATH id="juce_audio_utils" path="JUCE/modules"/>
-        <MODULEPATH id="juce_audio_processors" path="JUCE/modules"/>
-        <MODULEPATH id="juce_audio_plugin_client" path="JUCE/modules"/>
-        <MODULEPATH id="juce_audio_formats" path="JUCE/modules"/>
-        <MODULEPATH id="juce_audio_devices" path="JUCE/modules"/>
-        <MODULEPATH id="juce_audio_basics" path="JUCE/modules"/>
-        <MODULEPATH id="juce_gui_extra" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="~/repos/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="~/repos/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="~/repos/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="~/repos/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="~/repos/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="~/repos/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="~/repos/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="~/repos/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="~/repos/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="~/repos/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_basics" path="~/repos/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="~/repos/JUCE/modules"/>
       </MODULEPATHS>
     </XCODE_MAC>
   </EXPORTFORMATS>
@@ -88,5 +65,5 @@
     <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0"/>
     <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
   </MODULES>
-  <JUCEOPTIONS JUCE_QUICKTIME="disabled" JUCE_USE_MP3AUDIOFORMAT="enabled"/>
+  <JUCEOPTIONS JUCE_QUICKTIME="disabled" JUCE_USE_MP3AUDIOFORMAT="1"/>
 </JUCERPROJECT>

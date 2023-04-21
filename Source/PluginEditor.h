@@ -36,7 +36,7 @@ public:
 private:
     AudioFilePlayerProcessor& processor;
 
-    ScopedPointer<AudioThumbnailComp> thumbnail;
+    std::unique_ptr<AudioThumbnailComp> thumbnail;
 
     TextButton startStopButton;
 

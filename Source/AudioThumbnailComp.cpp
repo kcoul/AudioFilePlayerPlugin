@@ -188,6 +188,7 @@ void AudioThumbnailComp::updateCursorPosition()
 {
     currentPositionMarker.setVisible(transportSource.isPlaying() || isMouseButtonDown());
 
-    currentPositionMarker.setRectangle(Rectangle<float>(timeToX(transportSource.getCurrentPosition()) - 0.75f, 0,
+    auto x = jmax(0.0f, timeToX(transportSource.getCurrentPosition()) - 0.75f);
+    currentPositionMarker.setRectangle(Rectangle<float>(x, 0,
         1.5f, (float)(getHeight() - scrollbar.getHeight())));
 }
