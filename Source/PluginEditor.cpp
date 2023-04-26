@@ -23,6 +23,18 @@ AudioFilePlayerEditor::AudioFilePlayerEditor(AudioFilePlayerProcessor& p) :
     AudioProcessorEditor(&p),
     processor(p)
 {
+    buttonLoadMIDIFile = std::make_unique<juce::TextButton>("Load a MIDI file");
+    addAndMakeVisible(buttonLoadMIDIFile.get());
+    buttonLoadMIDIFile->onClick = [this]
+    {
+        juce::FileChooser fileChooser("Find a MIDI file", juce::File(), "*.mid");
+        
+        if (fileChooser.browseForFileToOpen())
+        {
+            processor.loadMIDIFile(fileChooser.getResult());
+        }
+    };
+    
     thumbnail = std::make_unique<AudioThumbnailComp>(processor.formatManager, processor.transportSource, processor.thumbnailCache, processor.currentlyLoadedFile);
     addAndMakeVisible(thumbnail.get());
     thumbnail->addChangeListener(this);
@@ -34,12 +46,16 @@ AudioFilePlayerEditor::AudioFilePlayerEditor(AudioFilePlayerProcessor& p) :
 
     setOpaque(true);
 
-    setSize(512, 220);
+    setSize(512, 270);
+    
+    // Register to receive topologyChanged() callbacks from pts.
+    pts.addListener (this);
 }
 
 AudioFilePlayerEditor::~AudioFilePlayerEditor()
 {
     thumbnail->removeChangeListener(this);
+    pts.removeListener(this);
 }
 
 void AudioFilePlayerEditor::paint(Graphics& g)
@@ -58,6 +74,8 @@ void AudioFilePlayerEditor::resized()
     r.removeFromBottom(6);
     thumbnail->setBounds(r.removeFromBottom(180));
     r.removeFromBottom(6);
+    
+    buttonLoadMIDIFile->setBounds(r.removeFromBottom(32));
 }
 
 void AudioFilePlayerEditor::buttonClicked (Button* buttonThatWasClicked) 
@@ -80,7 +98,57 @@ void AudioFilePlayerEditor::changeListenerCallback(ChangeBroadcaster* source)
 {
     if (source == thumbnail.get())
     {
-        processor.loadFileIntoTransport(thumbnail->getLastDroppedFile());
+        processor.loadAudioFileIntoTransport(thumbnail->getLastDroppedFile());
         thumbnail->setFile(thumbnail->getLastDroppedFile());
+    }
+}
+
+void AudioFilePlayerEditor::topologyChanged()
+{
+    // We have a new topology, so find out what it isand store it in a local
+    // variable.
+    auto currentTopology = pts.getCurrentTopology();
+    Logger::writeToLog ("\nNew BLOCKS topology.");
+
+    // The blocks member of a BlockTopology contains an array of blocks. Here we
+    // loop over them and print some information.
+    Logger::writeToLog ("Detected " + String (currentTopology.blocks.size()) + " blocks:");
+
+    for (auto& block : currentTopology.blocks)
+    {
+        Logger::writeToLog ("");
+        Logger::writeToLog ("    Description:   " + block->getDeviceDescription());
+        Logger::writeToLog ("    Battery level: " + String (block->getBatteryLevel()));
+        Logger::writeToLog ("    UID:           " + String (block->uid));
+        Logger::writeToLog ("    Serial number: " + block->serialNumber);
+        Logger::writeToLog ("    TypeID:        " + String (block->getType()));
+        switch (block->getType())
+        {
+            case roli::Block::unknown:
+                Logger::writeToLog ("    Type:          unknown");
+                break;
+            case roli::Block::lightPadBlock:
+                Logger::writeToLog ("    Type:          lightPadBlock");
+                break;
+            case roli::Block::liveBlock:
+                Logger::writeToLog ("    Type:          liveBlock");
+                break;
+            case roli::Block::loopBlock:
+                Logger::writeToLog ("    Type:          loopBlock");
+                break;
+            case roli::Block::developerControlBlock:
+                Logger::writeToLog ("    Type:          developerControlBlock");
+                break;
+            case roli::Block::touchBlock:
+                Logger::writeToLog ("    Type:          touchBlock");
+                break;
+            case roli::Block::seaboardBlock:
+                Logger::writeToLog ("    Type:          seaboardBlock");
+                break;
+            case roli::Block::lumiKeysBlock:
+                Logger::writeToLog ("    Type:          lumiKeysBlock");
+                processor.lumi = block;
+                break;
+        };
     }
 }

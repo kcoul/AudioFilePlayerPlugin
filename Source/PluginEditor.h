@@ -20,11 +20,13 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "PluginProcessor.h"
+#include <roli_blocks_basics/roli_blocks_basics.h>
 
 class AudioFilePlayerEditor :
     public AudioProcessorEditor,
     private Button::Listener,
-    private ChangeListener
+    private ChangeListener,
+    private roli::TopologySource::Listener
 {
 public:
     AudioFilePlayerEditor(AudioFilePlayerProcessor&);
@@ -36,6 +38,8 @@ public:
 private:
     AudioFilePlayerProcessor& processor;
 
+    std::unique_ptr<juce::TextButton> buttonLoadMIDIFile;
+    
     std::unique_ptr<AudioThumbnailComp> thumbnail;
 
     TextButton startStopButton;
@@ -44,5 +48,11 @@ private:
 
     void changeListenerCallback(ChangeBroadcaster* source) override;
 
+    // Called by the PhysicalTopologySource when the BLOCKS topology changes.
+    void topologyChanged() override;
+
+    // The PhysicalTopologySource member variable which reports BLOCKS changes.
+    roli::PhysicalTopologySource pts;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioFilePlayerEditor)
 };

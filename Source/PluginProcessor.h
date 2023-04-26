@@ -56,13 +56,26 @@ public:
     File currentlyLoadedFile;
     AudioThumbnailCache thumbnailCache;
 
-    void loadFileIntoTransport(const File& audioFile);
-
+    void loadAudioFileIntoTransport(const File& audioFile);
+    void loadMIDIFile(juce::File fileMIDI);
+    
+    juce::CriticalSection processLock;
+    
+    juce::MidiFile MIDIFile;
+    bool isPlayingSomething;
+    bool trackHasChanged = false;
+    std::atomic<int> currentTrack;
+    std::atomic<int> numTracks;
+    double nextStartTime = -1.0;
+    
+    roli::Block::Ptr lumi;
+    
 private:
-
+    void sendAllNotesOff(juce::MidiBuffer& midiMessages);
     std::unique_ptr<AudioFormatReaderSource> currentAudioFileSource;
     TimeSliceThread readAheadThread;
 
+    void lumiMIDIEvent(const void* message, size_t size);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioFilePlayerProcessor)
 };

@@ -28,7 +28,8 @@
     <FILE id="unqOmz" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
   </MAINGROUP>
   <EXPORTFORMATS>
-    <XCODE_MAC targetFolder="Builds/MacOSX" postbuildCommand="" vst3Folder="">
+    <XCODE_MAC targetFolder="Builds/MacOSX" postbuildCommand="" vst3Folder=""
+               extraDefs="JUCE_MODAL_LOOPS_PERMITTED=1">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" osxSDK="default" osxCompatibility="default" isDebug="1"
                        optimisation="1" targetName="AudioFilePlayer" enablePluginBinaryCopyStep="1"/>
@@ -48,6 +49,7 @@
         <MODULEPATH id="juce_audio_devices" path="~/repos/JUCE/modules"/>
         <MODULEPATH id="juce_audio_basics" path="~/repos/JUCE/modules"/>
         <MODULEPATH id="juce_gui_extra" path="~/repos/JUCE/modules"/>
+        <MODULEPATH id="roli_blocks_basics" path="../../repos"/>
       </MODULEPATHS>
     </XCODE_MAC>
   </EXPORTFORMATS>
@@ -64,6 +66,7 @@
     <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0"/>
     <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0"/>
     <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="roli_blocks_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
   </MODULES>
   <JUCEOPTIONS JUCE_QUICKTIME="disabled" JUCE_USE_MP3AUDIOFORMAT="1"/>
 </JUCERPROJECT>

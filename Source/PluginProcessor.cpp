@@ -94,12 +94,108 @@ void AudioFilePlayerProcessor::releaseResources()
     transportSource.releaseResources();
 }
 
+void AudioFilePlayerProcessor::loadMIDIFile(juce::File file)
+{
+    MIDIFile.clear();
+    
+    juce::FileInputStream stream(file);
+    MIDIFile.readFrom(stream);
+
+    /** This function call means that the MIDI file is going to be played with the
+        original tempo and signature.
+    */
+    MIDIFile.convertTimestampTicksToSeconds();
+    
+    numTracks.store(MIDIFile.getNumTracks());
+    currentTrack.store(0);
+    trackHasChanged = false;
+}
+
+void AudioFilePlayerProcessor::lumiMIDIEvent(const void* message, size_t size)
+{
+    if (lumi)
+        lumi->sendMessage(message, size);
+}
+
 void AudioFilePlayerProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffer& midiMessages)
 {
+    juce::ScopedNoDenormals noDenormals;
+    
     for(int i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
     transportSource.getNextAudioBlock(AudioSourceChannelInfo(buffer));
+    
+    const juce::ScopedTryLock myScopedLock(processLock);
+
+    if (myScopedLock.isLocked())
+    {
+        if (numTracks.load() > 0)
+        {
+            const juce::MidiMessageSequence *theSequence = MIDIFile.getTrack(currentTrack.load());
+
+            auto startTime = 0;
+            auto endTime = theSequence->getEndTime();
+            auto sampleLength = 1.0 / getSampleRate();
+
+            // If the transport bar position has been moved by the user or because of looping
+            if (std::abs(startTime - nextStartTime) > sampleLength && nextStartTime > 0.0)
+                sendAllNotesOff(midiMessages);
+
+            nextStartTime = endTime;
+
+            // If the MIDI file doesn't contain any event anymore
+            if (isPlayingSomething && startTime >= theSequence->getEndTime())
+                sendAllNotesOff(midiMessages);
+
+            else
+            {
+                // Called when the user changes the track during playback
+                if (trackHasChanged)
+                {
+                    trackHasChanged = false;
+                    sendAllNotesOff(midiMessages);
+                }
+                                
+                // Iterating through the MIDI file contents and trying to find an event that
+                // needs to be called in the current time frame
+                
+                for (auto i = 0; i < theSequence->getNumEvents(); i++)
+                {
+                    juce::MidiMessageSequence::MidiEventHolder *event = theSequence->getEventPointer(i);
+
+                    if (event->message.getTimeStamp() >= startTime && event->message.getTimeStamp() < endTime)
+                    {
+                        //auto samplePosition = juce::roundToInt((event->message.getTimeStamp() - startTime) * getSampleRate());
+                        //midiMessages.addEvent(event->message, samplePosition);
+
+                        lumiMIDIEvent((void*)event->message.getRawData(), event->message.getRawDataSize());
+                        
+                        isPlayingSomething = true;
+                    }
+                }
+                 
+            }
+        }
+    }
+    else
+    {
+        // If we have just opened a MIDI file with no content
+        if (isPlayingSomething)
+            sendAllNotesOff(midiMessages);
+    }
+}
+
+void AudioFilePlayerProcessor::sendAllNotesOff(juce::MidiBuffer& midiMessages)
+{
+    for (auto i = 1; i <= 16; i++)
+    {
+        midiMessages.addEvent(juce::MidiMessage::allNotesOff(i), 0);
+        midiMessages.addEvent(juce::MidiMessage::allSoundOff(i), 0);
+        midiMessages.addEvent(juce::MidiMessage::allControllersOff(i), 0);
+    }
+
+    isPlayingSomething = false;
 }
 
 bool AudioFilePlayerProcessor::hasEditor() const
@@ -132,7 +228,7 @@ void AudioFilePlayerProcessor::setStateInformation(const void* data, int sizeInB
             currentlyLoadedFile = File::createFileWithoutCheckingPath(xmlState->getStringAttribute("audiofile"));
             if (currentlyLoadedFile.existsAsFile())
             {
-                loadFileIntoTransport(currentlyLoadedFile);
+                loadAudioFileIntoTransport(currentlyLoadedFile);
             }
         }
     }
@@ -143,7 +239,7 @@ AudioProcessor* JUCE_CALLTYPE createPluginFilter()
     return new AudioFilePlayerProcessor();
 }
 
-void AudioFilePlayerProcessor::loadFileIntoTransport(const File& audioFile)
+void AudioFilePlayerProcessor::loadAudioFileIntoTransport(const File& audioFile)
 {
     // unload the previous file source and delete it..
     transportSource.stop();
