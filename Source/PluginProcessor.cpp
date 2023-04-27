@@ -133,22 +133,22 @@ void AudioFilePlayerProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffe
 
     if (myScopedLock.isLocked())
     {
-        if (numTracks.load() > 0)
+        if (numTracks.load() > 0 && transportSource.isPlaying())
         {
-            const juce::MidiMessageSequence *theSequence = MIDIFile.getTrack(currentTrack.load());
+            const juce::MidiMessageSequence* midiSequence = MIDIFile.getTrack(currentTrack.load());
 
-            auto startTime = nextStartTime;
+            auto startTime = transportSource.getCurrentPosition()/*nextStartTime*/;
             auto endTime = startTime + buffer.getNumSamples() / getSampleRate();
             auto sampleLength = 1.0 / getSampleRate();
 
             // If the transport bar position has been moved by the user or because of looping
             if (std::abs(startTime - nextStartTime) > sampleLength && nextStartTime > 0.0)
                 sendAllNotesOff(midiMessages);
-
+            
             nextStartTime = endTime;
 
-            // If the MIDI file doesn't contain any event anymore
-            if (isPlayingSomething && startTime >= theSequence->getEndTime())
+            // If we've reached the end of the sequence
+            if (isPlayingSomething && startTime >= midiSequence->getEndTime())
                 sendAllNotesOff(midiMessages);
 
             else
@@ -163,16 +163,16 @@ void AudioFilePlayerProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffe
                 // Iterating through the MIDI file contents and trying to find an event that
                 // needs to be called in the current time frame
                 
-                for (auto i = 0; i < theSequence->getNumEvents(); i++)
+                for (auto i = 0; i < midiSequence->getNumEvents(); i++)
                 {
-                    juce::MidiMessageSequence::MidiEventHolder* event = theSequence->getEventPointer(i);
+                    juce::MidiMessageSequence::MidiEventHolder* event = midiSequence->getEventPointer(i);
 
                     if (event->message.getTimeStamp() >= startTime && event->message.getTimeStamp() < endTime)
                     {
-                        auto ts = event->message.getTimeStamp();
+                        //auto ts = event->message.getTimeStamp();
                         if (event->message.isNoteOn() || event->message.isNoteOff())
                         {
-                            auto noteNumber = event->message.getNoteNumber();
+                            //auto noteNumber = event->message.getNoteNumber();
                             //auto samplePosition = juce::roundToInt((event->message.getTimeStamp() - startTime) * getSampleRate());
                             //midiMessages.addEvent(event->message, samplePosition);
 
@@ -201,6 +201,8 @@ void AudioFilePlayerProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffe
 
 void AudioFilePlayerProcessor::sendAllNotesOff(juce::MidiBuffer& midiMessages)
 {
+    midiMessages.clear();
+    //Send to Lumi for 'stuck note' situations
     for (auto i = 1; i <= 16; i++)
     {
         midiMessages.addEvent(juce::MidiMessage::allNotesOff(i), 0);
@@ -208,6 +210,9 @@ void AudioFilePlayerProcessor::sendAllNotesOff(juce::MidiBuffer& midiMessages)
         midiMessages.addEvent(juce::MidiMessage::allControllersOff(i), 0);
     }
 
+    for(auto msg : midiMessages)
+        lumiMIDIEvent(msg.data, msg.numBytes);
+    
     isPlayingSomething = false;
 }
 
