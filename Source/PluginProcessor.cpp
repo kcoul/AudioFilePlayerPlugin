@@ -26,6 +26,7 @@ AudioFilePlayerProcessor::AudioFilePlayerProcessor() :
 {
     formatManager.registerBasicFormats();
     readAheadThread.startThread();
+    numTracks.store(0);
 }
 
 AudioFilePlayerProcessor::~AudioFilePlayerProcessor()
@@ -87,6 +88,8 @@ void AudioFilePlayerProcessor::changeProgramName(int index, const String& newNam
 void AudioFilePlayerProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     transportSource.prepareToPlay(samplesPerBlock, sampleRate);
+    
+    nextStartTime = 0.0;
 }
 
 void AudioFilePlayerProcessor::releaseResources()
@@ -134,8 +137,8 @@ void AudioFilePlayerProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffe
         {
             const juce::MidiMessageSequence *theSequence = MIDIFile.getTrack(currentTrack.load());
 
-            auto startTime = 0;
-            auto endTime = theSequence->getEndTime();
+            auto startTime = nextStartTime;
+            auto endTime = startTime + buffer.getNumSamples() / getSampleRate();
             auto sampleLength = 1.0 / getSampleRate();
 
             // If the transport bar position has been moved by the user or because of looping
@@ -162,20 +165,30 @@ void AudioFilePlayerProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffe
                 
                 for (auto i = 0; i < theSequence->getNumEvents(); i++)
                 {
-                    juce::MidiMessageSequence::MidiEventHolder *event = theSequence->getEventPointer(i);
+                    juce::MidiMessageSequence::MidiEventHolder* event = theSequence->getEventPointer(i);
 
                     if (event->message.getTimeStamp() >= startTime && event->message.getTimeStamp() < endTime)
                     {
-                        //auto samplePosition = juce::roundToInt((event->message.getTimeStamp() - startTime) * getSampleRate());
-                        //midiMessages.addEvent(event->message, samplePosition);
+                        auto ts = event->message.getTimeStamp();
+                        if (event->message.isNoteOn() || event->message.isNoteOff())
+                        {
+                            auto noteNumber = event->message.getNoteNumber();
+                            //auto samplePosition = juce::roundToInt((event->message.getTimeStamp() - startTime) * getSampleRate());
+                            //midiMessages.addEvent(event->message, samplePosition);
 
-                        lumiMIDIEvent((void*)event->message.getRawData(), event->message.getRawDataSize());
-                        
-                        isPlayingSomething = true;
+                            lumiMIDIEvent((void*)event->message.getRawData(), event->message.getRawDataSize());
+                            
+                            isPlayingSomething = true;
+                        }
                     }
                 }
-                 
             }
+        }
+        else
+        {
+            // If the transport isn't active anymore
+            if (isPlayingSomething)
+                sendAllNotesOff(midiMessages);
         }
     }
     else
