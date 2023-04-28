@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include <JuceHeader.h>
 
 class AudioThumbnailComp :
     public Component,
@@ -33,6 +33,7 @@ public:
         AudioFormatManager& formatManager,
         AudioTransportSource& transport,
         AudioThumbnailCache& thumbCache,
+        std::function<void()>& relayAllNotesOff,
         const File& existingFile = File());
 
     ~AudioThumbnailComp();
@@ -66,6 +67,7 @@ public:
     void mouseWheelMove(const MouseEvent&, const MouseWheelDetails& wheel) override;
 
 private:
+
     AudioTransportSource& transportSource;
     ScrollBar scrollbar;
 
@@ -87,4 +89,6 @@ private:
     void timerCallback() override;
 
     void updateCursorPosition();
+    
+    std::function<void()>& allNotesOff;
 };
