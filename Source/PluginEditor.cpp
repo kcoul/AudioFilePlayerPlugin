@@ -35,7 +35,11 @@ AudioFilePlayerEditor::AudioFilePlayerEditor(AudioFilePlayerProcessor& p) :
         }
     };
     
-    thumbnail = std::make_unique<AudioThumbnailComp>(processor.formatManager, processor.transportSource, processor.thumbnailCache, processor.currentlyLoadedFile);
+    thumbnail = std::make_unique<AudioThumbnailComp>(processor.formatManager,
+                                                     processor.transportSource,
+                                                     processor.thumbnailCache,
+                                                     relayAllNotesOff,
+                                                     processor.currentlyLoadedFile);
     addAndMakeVisible(thumbnail.get());
     thumbnail->addChangeListener(this);
 
@@ -85,6 +89,7 @@ void AudioFilePlayerEditor::buttonClicked (Button* buttonThatWasClicked)
         if (processor.transportSource.isPlaying())
         {
             processor.transportSource.stop();
+            processor.sendAllNotesOff();
         }
         else
         {

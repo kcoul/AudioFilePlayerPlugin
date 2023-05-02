@@ -18,7 +18,8 @@
 
 #pragma once
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include <JuceHeader.h>
+#include "AudioThumbnailComp.h"
 #include "PluginProcessor.h"
 #include <roli_blocks_basics/roli_blocks_basics.h>
 
@@ -34,10 +35,11 @@ public:
 
     void paint(Graphics&) override;
     void resized() override;
-
 private:
     AudioFilePlayerProcessor& processor;
 
+    std::function<void()> relayAllNotesOff = [this]() { processor.sendAllNotesOff(); };
+    
     std::unique_ptr<juce::TextButton> buttonLoadMIDIFile;
     
     std::unique_ptr<AudioThumbnailComp> thumbnail;

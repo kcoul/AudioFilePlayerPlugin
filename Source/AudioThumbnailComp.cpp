@@ -22,11 +22,13 @@ AudioThumbnailComp::AudioThumbnailComp(
     AudioFormatManager& formatManager,
     AudioTransportSource& transport,
     AudioThumbnailCache& thumbCache,
+    std::function<void()>& relayAllNotesOff,
     const File& existingFile) :
         transportSource(transport),
         scrollbar(false),
         thumbnail(512, formatManager, thumbCache),
-        isFollowingTransport(false)
+        isFollowingTransport(false),
+        allNotesOff(relayAllNotesOff)
 {
     thumbnail.addChangeListener(this);
 
@@ -132,7 +134,10 @@ void AudioThumbnailComp::mouseDown(const MouseEvent& e)
 void AudioThumbnailComp::mouseDrag(const MouseEvent& e)
 {
     if (canMoveTransport())
+    {
         transportSource.setPosition(jmax(0.0, xToTime((float)e.x)));
+        allNotesOff();
+    }
 }
 
 void AudioThumbnailComp::mouseUp(const MouseEvent&)

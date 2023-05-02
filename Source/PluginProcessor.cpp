@@ -27,6 +27,11 @@ AudioFilePlayerProcessor::AudioFilePlayerProcessor() :
     formatManager.registerBasicFormats();
     readAheadThread.startThread();
     numTracks.store(0);
+    
+    for (auto i = 0; i <= 127; i++)
+    {
+        noteOffMessages.addEvent(juce::MidiMessage::noteOff(1, i), 0);
+    }
 }
 
 AudioFilePlayerProcessor::~AudioFilePlayerProcessor()
@@ -137,19 +142,15 @@ void AudioFilePlayerProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffe
         {
             const juce::MidiMessageSequence* midiSequence = MIDIFile.getTrack(currentTrack.load());
 
-            auto startTime = transportSource.getCurrentPosition()/*nextStartTime*/;
+            auto startTime = transportSource.getCurrentPosition();
             auto endTime = startTime + buffer.getNumSamples() / getSampleRate();
             auto sampleLength = 1.0 / getSampleRate();
 
-            // If the transport bar position has been moved by the user or because of looping
-            if (std::abs(startTime - nextStartTime) > sampleLength && nextStartTime > 0.0)
-                sendAllNotesOff(midiMessages);
-            
             nextStartTime = endTime;
-
+                        
             // If we've reached the end of the sequence
             if (isPlayingSomething && startTime >= midiSequence->getEndTime())
-                sendAllNotesOff(midiMessages);
+                sendAllNotesOff();
 
             else
             {
@@ -157,7 +158,7 @@ void AudioFilePlayerProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffe
                 if (trackHasChanged)
                 {
                     trackHasChanged = false;
-                    sendAllNotesOff(midiMessages);
+                    sendAllNotesOff();
                 }
                                 
                 // Iterating through the MIDI file contents and trying to find an event that
@@ -188,29 +189,21 @@ void AudioFilePlayerProcessor::processBlock(AudioSampleBuffer& buffer, MidiBuffe
         {
             // If the transport isn't active anymore
             if (isPlayingSomething)
-                sendAllNotesOff(midiMessages);
+                sendAllNotesOff();
         }
     }
     else
     {
         // If we have just opened a MIDI file with no content
         if (isPlayingSomething)
-            sendAllNotesOff(midiMessages);
+            sendAllNotesOff();
     }
 }
 
-void AudioFilePlayerProcessor::sendAllNotesOff(juce::MidiBuffer& midiMessages)
+void AudioFilePlayerProcessor::sendAllNotesOff()
 {
-    midiMessages.clear();
     //Send to Lumi for 'stuck note' situations
-    for (auto i = 1; i <= 16; i++)
-    {
-        midiMessages.addEvent(juce::MidiMessage::allNotesOff(i), 0);
-        midiMessages.addEvent(juce::MidiMessage::allSoundOff(i), 0);
-        midiMessages.addEvent(juce::MidiMessage::allControllersOff(i), 0);
-    }
-
-    for(auto msg : midiMessages)
+    for(auto msg : noteOffMessages)
         lumiMIDIEvent(msg.data, msg.numBytes);
     
     isPlayingSomething = false;

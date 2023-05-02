@@ -18,8 +18,7 @@
 
 #pragma once
 
-#include "../JuceLibraryCode/JuceHeader.h"
-#include "AudioThumbnailComp.h"
+#include <JuceHeader.h>
 
 class AudioFilePlayerProcessor :
     public AudioProcessor
@@ -69,9 +68,10 @@ public:
     double nextStartTime = 0.0;
     
     roli::Block::Ptr lumi;
-    
+    void sendAllNotesOff();
+
 private:
-    void sendAllNotesOff(juce::MidiBuffer& midiMessages);
+    juce::MidiBuffer noteOffMessages;
     std::unique_ptr<AudioFormatReaderSource> currentAudioFileSource;
     TimeSliceThread readAheadThread;
     
